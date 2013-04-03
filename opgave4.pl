@@ -6,9 +6,28 @@
 
 :- [world].
 
+run :- findGoldFormatted(1, 1).
 run(Out) :- findGold(1, 1, Out).
 
 aangrenzend(X, Y, U, V) :- links(X, Y, U, V); rechts(X, Y, U, V); boven(X, Y, U, V); onder(X, Y, U, V).
+
+findGoldFormatted(X, Y) :- safePositions(X, Y, Safe), findGlitter(Safe, (Xt, Yt)), findGold(Xt, Yt, X, Y, Safe, [(Xt, Yt)], Path),
+                           convertDirections(Path, Actions), reverse(Safe, RevSafe),
+                           nl,
+                           write('Visited tiles:'), nl,
+                           writeTiles(RevSafe), nl,
+                           write('Actions:'), nl,
+                           writeActions(Actions, 1), nl, nl.
+
+writeTiles([]).
+writeTiles([(Lx, Ly)|Ist]) :- write(' • '), write('('), write(Lx), write(', '), write(Ly), write(')'), nl,
+ writeTiles(Ist).
+
+writeActions([grab], N) :- write(' '), write(N), write('. '), write('Grab').
+writeActions([goNorth|Rest], N) :- write(' '), write(N), write('. '), write('Go North'), nl, M is N + 1, writeActions(Rest, M).
+writeActions([goSouth|Rest], N) :- write(' '), write(N), write('. '), write('Go South'), nl, M is N + 1, writeActions(Rest, M).
+writeActions([goEast|Rest], N) :- write(' '), write(N), write('. '), write('Go East'), nl, M is N + 1, writeActions(Rest, M).
+writeActions([goWest|Rest], N) :- write(' '), write(N), write('. '), write('Go West'), nl, M is N + 1, writeActions(Rest, M).
 
 findGold(X, Y, Out) :- safePositions(X, Y, Safe), findGlitter(Safe, (Xt, Yt)), findGold(Xt, Yt, X, Y, Safe, [(Xt, Yt)], Path),
                        convertDirections(Path, Actions), reverse(Safe, RevSafe), append(RevSafe, Actions, Out).

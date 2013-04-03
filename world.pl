@@ -19,12 +19,12 @@
  */
 
 % pits
-breeze(X, Y) :- aangrenzend(X, Y, 3, 1).
-breeze(X, Y) :- aangrenzend(X, Y, 3, 3).
-breeze(X, Y) :- aangrenzend(X, Y, 4, 3).
+breeze(X, Y) :- aangrenzend_(X, Y, 3, 1).
+breeze(X, Y) :- aangrenzend_(X, Y, 3, 3).
+breeze(X, Y) :- aangrenzend_(X, Y, 4, 3).
 
 % wumpus
-stench(X, Y) :- aangrenzend(X, Y, 1, 3).
+stench(X, Y) :- aangrenzend_(X, Y, 1, 3).
 
 % gold
 glitter(2, 3).
@@ -44,10 +44,10 @@ glitter(2, 3).
 tussen(X,Y,X) :- X =< Y.
 tussen(X,Y,Z) :- A is X + 1, A =< Y, tussen(A,Y,Z).
 
-kamer(X, Y) :- tussen(1, 4, X), tussen(1, 4, Y).
-rechts(X, Y, U, V) :- kamer(X, Y), kamer(U, V), Y is V, U is X + 1.
-links(X, Y, U, V) :- kamer(X, Y), kamer(U, V), Y is V, U is X - 1.
-boven(X, Y, U, V) :- kamer(X, Y), kamer(U, V), Y is V - 1, X = U.
-onder(X, Y, U, V) :- kamer(X, Y), kamer(U, V), Y is V + 1, X = U.
+kamer(X, Y) :- X >= 1, X =< 4, Y >= 1, Y =< 4.
+rechts(X, Y, U, Y) :- U is X + 1, kamer(X, Y), kamer(U, Y).
+links(X, Y, U, Y) :- U is X - 1, kamer(X, Y), kamer(U, Y).
+boven(X, Y, X, V) :- V is Y + 1, kamer(X, Y), kamer(X, V).
+onder(X, Y, X, V) :- V is Y - 1, kamer(X, Y), kamer(X, V).
 
-aangrenzend(X, Y, U, V) :- links(X, Y, U, V); rechts(X, Y, U, V); boven(X, Y, U, V); onder(X, Y, U, V).
+aangrenzend_(X, Y, U, V) :- links(X, Y, U, V); rechts(X, Y, U, V); boven(X, Y, U, V); onder(X, Y, U, V).

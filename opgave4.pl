@@ -6,60 +6,41 @@
 
 :- [world].
 
-% redefined safe/unsafe (using observations only)
-possibleDanger(X, Y) :- possibleWumpus(X, Y).
-possibleDanger(X, Y) :- possiblePit(X, Y).
-safe(X, Y) :- \+ possibleDanger(X, Y).
-possibleWumpus(X, Y) :- stench(U, V), aangrenzend(X, Y, U, V).
-possiblePit(X, Y) :- breeze(U, V), aangrenzend(X, Y, U, V).
+run(Out) :- findGold(1, 1, Out).
+
 aangrenzend(X, Y, U, V) :- links(X, Y, U, V); rechts(X, Y, U, V); boven(X, Y, U, V); onder(X, Y, U, V).
 
-seenSurrounded(X, Y, Z) :-  seenDirection(X, Y, Z, boven), 
-							seenDirection(X, Y, Z, onder),
-							seenDirection(X, Y, Z, links),
-							seenDirection(X, Y, Z, rechts).
+findGold(X, Y, Out) :- safePositions(X, Y, Safe), findGlitter(Safe, (Xt, Yt)), findGold(Xt, Yt, X, Y, Safe, [(Xt, Yt)], Path),
+                       convertDirections(Path, Actions), reverse(Safe, RevSafe), append(RevSafe, Actions, Out).
+findGold(X, Y, X, Y, _, _, [(X, Y)]) :- !, true.
+findGold(X, Y, XFrom, YFrom, Safe, Visited, Path) :- !, aangrenzend(X, Y, Xu, Yu), member((Xu, Yu), Safe), \+ member((Xu, Yu), Visited),
+                                                     findGold(Xu, Yu, XFrom, YFrom, Safe, [(Xu, Yu)|Visited], T), append(T, [(X, Y)], Path).
 
-% 'Delegates'  --->  call(Z, X, Y)  ---->   Z(X, Y)
-seenDirection(X, Y, _, D) :- \+ call(D, X, Y, _, _).
-seenDirection(X, Y, Z, D) :- call(D, X, Y, X2, Y2), call(Z, X2, Y2). % and check if agent has seen X2,Y2 !
+safePositions(X, Y, Out) :- findall((Xn, Yn), aangrenzend(X, Y, Xn, Yn), L), safePositions([(X, Y)], [(X, Y)|L], [(X, Y)|L], Out).
+safePositions(Visited, NoPit, NoWumpus, Out) :- member((X, Y), Visited), aangrenzend(X, Y, Xn, Yn), \+ member((Xn, Yn), Visited),
+                                                member((Xn, Yn), NoPit), member((Xn, Yn), NoWumpus), !,
+                                                checkNoPit(Xn, Yn, Out1), checkNoWumpus(Xn, Yn, Out2),
+                                                append(Out1, NoPit, A), append(Out2, NoWumpus, B),
+                                                filterUnique(A, AA), filterUnique(B, BB),
+                                                safePositions([(Xn, Yn)|Visited], AA, BB, Out).
+safePositions(X, _, _, X).
 
-wumpus(X, Y) :- seenSurrounded(X, Y, stench).
-pit(X, Y) :- seenSurrounded(X, Y, breeze).
+convertDirections([_], [grab]).
+convertDirections([(Px, Py),(Lx, Ly)|An], [goNorth|Out]) :- boven(Px, Py, Lx, Ly), convertDirections([(Lx, Ly)|An], Out).
+convertDirections([(Px, Py),(Lx, Ly)|An], [goSouth|Out]) :- onder(Px, Py, Lx, Ly), convertDirections([(Lx, Ly)|An], Out).
+convertDirections([(Px, Py),(Lx, Ly)|An], [goEast|Out]) :- rechts(Px, Py, Lx, Ly), convertDirections([(Lx, Ly)|An], Out).
+convertDirections([(Px, Py),(Lx, Ly)|An], [goWest|Out]) :- links(Px, Py, Lx, Ly), convertDirections([(Lx, Ly)|An], Out).
 
-/*
-wumpus(X, Y) :- stench(X1, Y1), boven(X, Y, X1, Y1), 
-				stench(X2, Y2), onder(X, Y, X2, Y2), 
-				stench(X3, Y3), links(X, Y, X3, Y3), 
-				stench(X4, Y4), rechts(X, Y, X4, Y4).
+findGlitter([], []).
+findGlitter([(X, Y)|_], (X, Y)) :- glitter(X, Y), !, true.
+findGlitter([_|Rest], (X, Y)) :- findGlitter(Rest, (X, Y)).
 
-pit(X, Y) :- 	breeze(X1, Y1), boven(X, Y, X1, Y1), 
-				breeze(X2, Y2), onder(X, Y, X2, Y2), 
-				breeze(X3, Y3), links(X, Y, X3, Y3), 
-				breeze(X4, Y4), rechts(X, Y, X4, Y4).
-*/
+checkNoPit(X, Y, Out) :- \+ breeze(X, Y), findall((Xn, Yn), aangrenzend(X, Y, Xn, Yn), Out), !, true.
+checkNoPit(_, _, []).
 
-% run/1
+checkNoWumpus(X, Y, Out) :- \+ stench(X, Y), findall((Xn, Yn), aangrenzend(X, Y, Xn, Yn), Out), !, true.
+checkNoWumpus(_, _, []).
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+filterUnique([], []).
+filterUnique([L|Ist], Out) :- member(L, Ist), !, filterUnique(Ist, Out).
+filterUnique([L|Ist], [L|Out]) :- filterUnique(Ist, Out).

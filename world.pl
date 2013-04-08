@@ -50,4 +50,9 @@ links(X, Y, U, Y) :- U is X - 1, kamer(X, Y), kamer(U, Y).
 boven(X, Y, X, V) :- V is Y + 1, kamer(X, Y), kamer(X, V).
 onder(X, Y, X, V) :- V is Y - 1, kamer(X, Y), kamer(X, V).
 
-aangrenzend_(X, Y, U, V) :- links(X, Y, U, V); rechts(X, Y, U, V); boven(X, Y, U, V); onder(X, Y, U, V).
+% ----------------------------------------------------------------------------
+
+aangrenzend_(X, Y, U, V) :- links(X, Y, U, V).
+aangrenzend_(X, Y, U, V) :- rechts(X, Y, U, V).
+aangrenzend_(X, Y, U, V) :- boven(X, Y, U, V).
+aangrenzend_(X, Y, U, V) :- onder(X, Y, U, V).
